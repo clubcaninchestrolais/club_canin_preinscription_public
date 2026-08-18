@@ -46,7 +46,7 @@ with st.form("preinscription_form"):
     cours_choisi_id = cours_nom_par_id[cours_choisi_nom]
 
     # ---------------------------------------------------------
-    # CHOIX DE LA SÉANCE (FILTRAGE PYTHON FIABLE)
+    # CHOIX DE LA SÉANCE (DEBUG + FILTRAGE PYTHON)
     # ---------------------------------------------------------
 
     st.header("Séance souhaitée")
@@ -58,13 +58,16 @@ with st.form("preinscription_form"):
     seances_data = (
         supabase
         .table("cours_seances")
-        .select("id, date_seance, heure_debut")
+        .select("id, date_seance, heure_debut, cours_id, actif")
         .eq("cours_id", cours_choisi_id)
         .order("date_seance", desc=False)
         .execute()
     )
 
     seances_raw = seances_data.data
+
+    # 🔥 DEBUG : afficher ce que Supabase renvoie réellement
+    st.write("DEBUG - Séances brutes renvoyées par Supabase :", seances_raw)
 
     # Filtrage Python robuste
     seances_list = []
