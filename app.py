@@ -1,5 +1,5 @@
 import streamlit as st
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from supabase import create_client, Client
 
 # --- Connexion Supabase ---
@@ -46,7 +46,7 @@ with st.form("preinscription_form"):
     cours_choisi_id = cours_nom_par_id[cours_choisi_nom]
 
     # ---------------------------------------------------------
-    # CHOIX DE LA SÉANCE (FILTRAGE PYTHON)
+    # CHOIX DE LA SÉANCE (FILTRAGE PYTHON FIABLE)
     # ---------------------------------------------------------
 
     st.header("Séance souhaitée")
@@ -54,7 +54,7 @@ with st.form("preinscription_form"):
     debut = date.today()
     fin = date.today() + timedelta(days=14)
 
-    # On récupère TOUTES les séances du cours
+    # On récupère toutes les séances du cours
     seances_data = (
         supabase
         .table("cours_seances")
@@ -66,15 +66,22 @@ with st.form("preinscription_form"):
 
     seances_raw = seances_data.data
 
-    # Filtrage Python pour éviter les problèmes de timestamp
+    # Filtrage Python robuste
     seances_list = []
     for s in seances_raw:
+        raw = s["date_seance"]
+
+        # Gestion des deux formats possibles : "YYYY-MM-DD" ou timestamp
         try:
-            d = date.fromisoformat(s["date_seance"])
-            if debut <= d <= fin:
-                seances_list.append(s)
+            if "T" in raw:
+                d = datetime.fromisoformat(raw.replace("Z", "")).date()
+            else:
+                d = date.fromisoformat(raw)
         except:
-            pass
+            continue
+
+        if debut <= d <= fin:
+            seances_list.append(s)
 
     if not seances_list:
         st.warning("Aucune séance disponible pour les 14 jours à venir.")
