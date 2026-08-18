@@ -21,20 +21,33 @@ with st.form("preinscription_form"):
     chien_nom = st.text_input("Nom du chien")
     chien_race = st.text_input("Race du chien")
 
+    # ---------------------------------------------------------
+    # CHOIX DU COURS (trié par ID)
+    # ---------------------------------------------------------
+
     st.header("Cours souhaité")
 
-    cours_data = supabase.table("cours").select("id, nom").execute()
+    cours_data = supabase.table("cours").select("id, nom").order("id").execute()
     cours_list = cours_data.data
 
-    cours_nom_par_id = {c["nom"]: c["id"] for c in cours_list}
-    cours_nom = list(cours_nom_par_id.keys())
+    # Liste triée : [(nom, id), ...]
+    cours_options = [(c["nom"], c["id"]) for c in cours_list]
 
-    cours_choisi_nom = st.selectbox("Choisir un cours", cours_nom)
-    cours_choisi_id = cours_nom_par_id[cours_choisi_nom]
+    # On affiche seulement les noms
+    cours_noms = [c[0] for c in cours_options]
 
-    # 🔥 DEBUG : afficher l’ID du cours sélectionné
+    cours_choisi_nom = st.selectbox("Choisir un cours", cours_noms)
+
+    # On récupère l'ID correspondant
+    cours_choisi_id = next(c[1] for c in cours_options if c[0] == cours_choisi_nom)
+
+    # DEBUG
     st.write("DEBUG - cours_choisi_nom :", cours_choisi_nom)
     st.write("DEBUG - cours_choisi_id :", cours_choisi_id)
+
+    # ---------------------------------------------------------
+    # CHOIX DE LA SÉANCE
+    # ---------------------------------------------------------
 
     st.header("Séance souhaitée")
 
@@ -52,7 +65,7 @@ with st.form("preinscription_form"):
 
     seances_raw = seances_data.data
 
-    # 🔥 DEBUG : afficher les séances renvoyées
+    # DEBUG
     st.write("DEBUG - séances brutes :", seances_raw)
 
     seances_list = []
