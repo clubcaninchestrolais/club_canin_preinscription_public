@@ -28,6 +28,7 @@ with st.form("preinscription_form"):
 
     st.header("Cours souhaité")
 
+    ### TRI OK ###
     cours_data = supabase.table("cours").select("id, nom").order("id").execute()
     cours_list = cours_data.data
 
