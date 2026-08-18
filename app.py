@@ -1,7 +1,7 @@
 import streamlit as st
 from datetime import date, datetime, timedelta
 from supabase import create_client, Client
-
+#version 180826h1057
 # --- Connexion Supabase ---
 SUPABASE_URL = st.secrets["SUPABASE_URL"]
 SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
@@ -123,4 +123,3 @@ with st.form("preinscription_form"):
         }).execute()
 
         st.success("Préinscription envoyée, merci !")
-
