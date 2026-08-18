@@ -2,16 +2,11 @@ import streamlit as st
 from datetime import date, datetime, timedelta
 from supabase import create_client, Client
 
-# --- Connexion Supabase ---
 SUPABASE_URL = st.secrets["SUPABASE_URL"]
 SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 st.title("Préinscription extérieure")
-
-# ---------------------------------------------------------
-# FORMULAIRE PUBLIC
-# ---------------------------------------------------------
 
 with st.form("preinscription_form"):
     st.header("Vos informations")
@@ -26,18 +21,10 @@ with st.form("preinscription_form"):
     chien_nom = st.text_input("Nom du chien")
     chien_race = st.text_input("Race du chien")
 
-    # ---------------------------------------------------------
-    # CHOIX DU COURS
-    # ---------------------------------------------------------
-
     st.header("Cours souhaité")
 
     cours_data = supabase.table("cours").select("id, nom").execute()
     cours_list = cours_data.data
-
-    if not cours_list:
-        st.error("Aucun cours disponible.")
-        st.stop()
 
     cours_nom_par_id = {c["nom"]: c["id"] for c in cours_list}
     cours_nom = list(cours_nom_par_id.keys())
@@ -45,20 +32,19 @@ with st.form("preinscription_form"):
     cours_choisi_nom = st.selectbox("Choisir un cours", cours_nom)
     cours_choisi_id = cours_nom_par_id[cours_choisi_nom]
 
-    # ---------------------------------------------------------
-    # CHOIX DE LA SÉANCE (DEBUG + FILTRAGE PYTHON)
-    # ---------------------------------------------------------
+    # 🔥 DEBUG : afficher l’ID du cours sélectionné
+    st.write("DEBUG - cours_choisi_nom :", cours_choisi_nom)
+    st.write("DEBUG - cours_choisi_id :", cours_choisi_id)
 
     st.header("Séance souhaitée")
 
     debut = date.today()
     fin = date.today() + timedelta(days=14)
 
-    # On récupère toutes les séances du cours
     seances_data = (
         supabase
         .table("cours_seances")
-        .select("id, date_seance, heure_debut, cours_id, actif")
+        .select("id, cours_id, date_seance, heure_debut, actif")
         .eq("cours_id", cours_choisi_id)
         .order("date_seance", desc=False)
         .execute()
@@ -66,15 +52,12 @@ with st.form("preinscription_form"):
 
     seances_raw = seances_data.data
 
-    # 🔥 DEBUG : afficher ce que Supabase renvoie réellement
-    st.write("DEBUG - Séances brutes renvoyées par Supabase :", seances_raw)
+    # 🔥 DEBUG : afficher les séances renvoyées
+    st.write("DEBUG - séances brutes :", seances_raw)
 
-    # Filtrage Python robuste
     seances_list = []
     for s in seances_raw:
         raw = s["date_seance"]
-
-        # Gestion des deux formats possibles : "YYYY-MM-DD" ou timestamp
         try:
             if "T" in raw:
                 d = datetime.fromisoformat(raw.replace("Z", "")).date()
@@ -99,33 +82,7 @@ with st.form("preinscription_form"):
         seance_choisie_label = st.selectbox("Choisir une séance", seance_labels)
         seance_choisie_id = seance_label_par_id[seance_choisie_label]
 
-    # ---------------------------------------------------------
-    # VALIDATION DU FORMULAIRE
-    # ---------------------------------------------------------
-
     submitted = st.form_submit_button("Envoyer la préinscription")
 
     if submitted:
-        if not nom or not prenom or not email or not telephone or not chien_nom or not chien_race:
-            st.error("Veuillez remplir tous les champs obligatoires.")
-            st.stop()
-
-        if seance_choisie_id is None:
-            st.error("Aucune séance disponible. Réessayez plus tard.")
-            st.stop()
-
-        supabase.table("preinscriptions").insert({
-            "nom": nom,
-            "prenom": prenom,
-            "email": email,
-            "telephone": telephone,
-            "chien_nom": chien_nom,
-            "chien_race": chien_race,
-            "cours_id": cours_choisi_id,
-            "seance_id": seance_choisie_id,
-            "date_preinscrip": date.today().isoformat(),
-            "statut": "en_attente",
-            "traitee": False,
-        }).execute()
-
         st.success("Préinscription envoyée, merci !")
