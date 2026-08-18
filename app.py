@@ -123,3 +123,4 @@ with st.form("preinscription_form"):
         }).execute()
 
         st.success("Préinscription envoyée, merci !")
+
