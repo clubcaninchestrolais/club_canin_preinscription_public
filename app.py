@@ -46,7 +46,7 @@ with st.form("preinscription_form"):
     cours_choisi_id = cours_nom_par_id[cours_choisi_nom]
 
     # ---------------------------------------------------------
-    # CHOIX DE LA SÉANCE (14 JOURS À VENIR)
+    # CHOIX DE LA SÉANCE (FILTRAGE PYTHON)
     # ---------------------------------------------------------
 
     st.header("Séance souhaitée")
@@ -54,17 +54,27 @@ with st.form("preinscription_form"):
     debut = date.today()
     fin = date.today() + timedelta(days=14)
 
+    # On récupère TOUTES les séances du cours
     seances_data = (
         supabase
         .table("cours_seances")
         .select("id, date_seance, heure_debut")
         .eq("cours_id", cours_choisi_id)
-        .gte("date_seance", debut.isoformat())
-        .lte("date_seance", fin.isoformat())
+        .order("date_seance", desc=False)
         .execute()
     )
 
-    seances_list = seances_data.data
+    seances_raw = seances_data.data
+
+    # Filtrage Python pour éviter les problèmes de timestamp
+    seances_list = []
+    for s in seances_raw:
+        try:
+            d = date.fromisoformat(s["date_seance"])
+            if debut <= d <= fin:
+                seances_list.append(s)
+        except:
+            pass
 
     if not seances_list:
         st.warning("Aucune séance disponible pour les 14 jours à venir.")
