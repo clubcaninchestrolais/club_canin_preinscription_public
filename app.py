@@ -1,6 +1,8 @@
 import streamlit as st
 from datetime import date, datetime, timedelta
 from supabase import create_client, Client
+st.write("PAGE ACTIVE : app.py")
+
 #version 180826h1057
 # --- Connexion Supabase ---
 SUPABASE_URL = st.secrets["SUPABASE_URL"]
