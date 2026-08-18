@@ -51,7 +51,7 @@ with st.form("preinscription_form"):
 
     st.header("Séance souhaitée")
 
-    debut = date.today()              # inclut aujourd’hui → évite les problèmes UTC
+    debut = date.today()
     fin = date.today() + timedelta(days=14)
 
     seances_data = (
@@ -72,3 +72,40 @@ with st.form("preinscription_form"):
     else:
         seance_label_par_id = {
             f"{s['date_seance']} - {s['heure_debut']}": s["id"]
+            for s in seances_list
+        }
+        seance_labels = list(seance_label_par_id.keys())
+
+        seance_choisie_label = st.selectbox("Choisir une séance", seance_labels)
+        seance_choisie_id = seance_label_par_id[seance_choisie_label]
+
+    # ---------------------------------------------------------
+    # VALIDATION DU FORMULAIRE
+    # ---------------------------------------------------------
+
+    submitted = st.form_submit_button("Envoyer la préinscription")
+
+    if submitted:
+        if not nom or not prenom or not email or not telephone or not chien_nom or not chien_race:
+            st.error("Veuillez remplir tous les champs obligatoires.")
+            st.stop()
+
+        if seance_choisie_id is None:
+            st.error("Aucune séance disponible. Réessayez plus tard.")
+            st.stop()
+
+        supabase.table("preinscriptions").insert({
+            "nom": nom,
+            "prenom": prenom,
+            "email": email,
+            "telephone": telephone,
+            "chien_nom": chien_nom,
+            "chien_race": chien_race,
+            "cours_id": cours_choisi_id,
+            "seance_id": seance_choisie_id,
+            "date_preinscrip": date.today().isoformat(),
+            "statut": "en_attente",
+            "traitee": False,
+        }).execute()
+
+        st.success("Préinscription envoyée, merci !")
