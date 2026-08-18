@@ -9,10 +9,6 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 st.title("Préinscription extérieure")
 
-# ---------------------------------------------------------
-# FORMULAIRE PUBLIC
-# ---------------------------------------------------------
-
 with st.form("preinscription_form"):
     st.header("Vos informations")
 
@@ -99,10 +95,6 @@ with st.form("preinscription_form"):
 
         seance_choisie_label = st.selectbox("Choisir une séance", seance_labels)
         seance_choisie_id = seance_label_par_id[seance_choisie_label]
-
-    # ---------------------------------------------------------
-    # VALIDATION DU FORMULAIRE
-    # ---------------------------------------------------------
 
     submitted = st.form_submit_button("Envoyer la préinscription")
 
