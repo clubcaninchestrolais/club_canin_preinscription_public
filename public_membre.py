@@ -1,6 +1,13 @@
 import streamlit as st
-from supabase_rest import supabase
+from supabase import create_client, Client
 import datetime
+
+# ---------------------------------------------------------
+# Connexion Supabase
+# ---------------------------------------------------------
+url = st.secrets["SUPABASE_URL"]
+key = st.secrets["SUPABASE_KEY"]
+supabase: Client = create_client(url, key)
 
 st.set_page_config(page_title="Préinscription membre", page_icon="🐶", layout="centered")
 
@@ -22,7 +29,6 @@ if not membres:
     st.error("Aucun membre trouvé.")
     st.stop()
 
-# Sélection du membre
 membre_labels = {f"{m['prenom']} {m['nom']}": m["id"] for m in membres}
 membre_nom = st.selectbox("Votre nom :", list(membre_labels.keys()))
 membre_id = membre_labels[membre_nom]
