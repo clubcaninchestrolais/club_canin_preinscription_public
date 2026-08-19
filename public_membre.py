@@ -15,79 +15,85 @@ st.title("Préinscription membre du Club Canin")
 st.write("Cette page est réservée aux **membres déjà inscrits au club**.")
 
 # ---------------------------------------------------------
-# Charger les membres
+# Identification par email
 # ---------------------------------------------------------
-membres = (
-    supabase.table("membres")
-    .select("*")
-    .order("nom")
-    .execute()
-    .data
-)
+email = st.text_input("Votre email (celui enregistré au club)")
 
-if not membres:
-    st.error("Aucun membre trouvé.")
-    st.stop()
+if email:
+    membre = (
+        supabase.table("membres")
+        .select("*")
+        .eq("email", email)
+        .execute()
+        .data
+    )
 
-membre_labels = {f"{m['prenom']} {m['nom']}": m["id"] for m in membres}
-membre_nom = st.selectbox("Votre nom :", list(membre_labels.keys()))
-membre_id = membre_labels[membre_nom]
+    if not membre:
+        st.error("Email inconnu. Vous devez être membre du club.")
+        st.stop()
 
-# ---------------------------------------------------------
-# Charger les chiens du membre
-# ---------------------------------------------------------
-chiens = (
-    supabase.table("chiens")
-    .select("*")
-    .eq("membre_id", membre_id)
-    .execute()
-    .data
-)
+    membre = membre[0]
+    membre_id = membre["id"]
 
-if not chiens:
-    st.error("Aucun chien enregistré pour ce membre.")
-    st.stop()
+    st.success(f"Bienvenue {membre['prenom']} {membre['nom']} !")
 
-chien_labels = {f"{c['nom']} ({c['race']})": c["id"] for c in chiens}
-chien_nom = st.selectbox("Votre chien :", list(chien_labels.keys()))
-chien_id = chien_labels[chien_nom]
+    # ---------------------------------------------------------
+    # Charger les chiens du membre
+    # ---------------------------------------------------------
+    chiens = (
+        supabase.table("chiens")
+        .select("*")
+        .eq("membre_id", membre_id)
+        .execute()
+        .data
+    )
 
-# ---------------------------------------------------------
-# Charger les séances
-# ---------------------------------------------------------
-seances = (
-    supabase.table("cours_seances")
-    .select("*")
-    .order("date_seance")
-    .execute()
-    .data
-)
+    if not chiens:
+        st.error("Aucun chien enregistré pour ce membre.")
+        st.stop()
 
-if not seances:
-    st.error("Aucune séance disponible.")
-    st.stop()
+    chien_labels = {f"{c['nom']} ({c['race']})": c["id"] for c in chiens}
+    chien_nom = st.selectbox("Votre chien :", list(chien_labels.keys()))
+    chien_id = chien_labels[chien_nom]
 
-seance_labels = {
-    f"{s['date_seance']} - {s['heure_debut']}": s["id"]
-    for s in seances
-}
+    # ---------------------------------------------------------
+    # Charger les séances
+    # ---------------------------------------------------------
+    seances = (
+        supabase.table("cours_seances")
+        .select("*")
+        .order("date_seance")
+        .execute()
+        .data
+    )
 
-seance_nom = st.selectbox("Séance :", list(seance_labels.keys()))
-seance_id = seance_labels[seance_nom]
+    if not seances:
+        st.error("Aucune séance disponible.")
+        st.stop()
 
-# ---------------------------------------------------------
-# Bouton d'inscription
-# ---------------------------------------------------------
-if st.button("S'inscrire à la séance"):
-    data = {
-        "membre_id": membre_id,
-        "chien_id": chien_id,
-        "seance_id": seance_id,
-        "type": "membre",
-        "statut": "en_attente",
-        "traitee": False,
-        "date_inscription": str(datetime.date.today())
+    seance_labels = {
+        f"{s['date_seance']} - {s['heure_debut']}": s["id"]
+        for s in seances
     }
 
-    supabase.table("preinscriptions").insert(data).execute()
-    st.success("Votre préinscription a été envoyée !")
+    seance_nom = st.selectbox("Séance :", list(seance_labels.keys()))
+    seance_id = seance_labels[seance_nom]
+
+    # ---------------------------------------------------------
+    # Bouton d'inscription
+    # ---------------------------------------------------------
+    if st.button("S'inscrire à la séance"):
+        data = {
+            "membre_id": membre_id,
+            "chien_id": chien_id,
+            "seance_id": seance_id,
+            "type": "membre",
+            "statut": "en_attente",
+            "traitee": False,
+            "date_inscription": str(datetime.date.today())
+        }
+
+        supabase.table("preinscriptions").insert(data).execute()
+        st.success("Votre préinscription a été envoyée !")
+
+
