@@ -47,7 +47,10 @@ if choix == "Membre du club":
 
         st.success(f"Bienvenue {membre['prenom']} {membre['nom']} !")
 
-        # Charger les chiens
+        # Vérifier si le membre est bénévole
+        est_benevole = membre.get("benevole", False)
+
+        # Charger les chiens du membre
         chiens = (
             supabase.table("chiens")
             .select("*")
@@ -56,13 +59,20 @@ if choix == "Membre du club":
             .data
         )
 
-        if not chiens:
-            st.error("Aucun chien enregistré pour ce membre.")
-            st.stop()
+        # Si bénévole → pas besoin de chien
+        if est_benevole:
+            st.info("Vous êtes bénévole : l'inscription ne nécessite pas de chien.")
+            chien_id = None
 
-        chien_labels = {f"{c['nom']} ({c['race']})": c["id"] for c in chiens}
-        chien_nom = st.selectbox("Votre chien :", list(chien_labels.keys()))
-        chien_id = chien_labels[chien_nom]
+        # Si membre normal → il doit avoir un chien
+        else:
+            if not chiens:
+                st.error("Aucun chien enregistré pour ce membre.")
+                st.stop()
+
+            chien_labels = {f"{c['nom']} ({c['race']})": c["id"] for c in chiens}
+            chien_nom = st.selectbox("Votre chien :", list(chien_labels.keys()))
+            chien_id = chien_labels[chien_nom]
 
         # Charger les séances
         seances = (
@@ -85,11 +95,11 @@ if choix == "Membre du club":
         seance_nom = st.selectbox("Séance :", list(seance_labels.keys()))
         seance_id = seance_labels[seance_nom]
 
-        # Inscription membre
+        # Inscription membre ou bénévole
         if st.button("S'inscrire à la séance"):
             data = {
                 "membre_id": membre_id,
-                "chien_id": chien_id,
+                "chien_id": chien_id,  # peut être None si bénévole
                 "seance_id": seance_id,
                 "date_presence": str(datetime.date.today()),
                 "present": False
@@ -100,7 +110,7 @@ if choix == "Membre du club":
 
 
 # ---------------------------------------------------------
-# FLUX EXTÉRIEUR — VERSION 100% COMPATIBLE AVEC TA TABLE
+# FLUX EXTÉRIEUR — Compatible avec ta table preinscriptions
 # ---------------------------------------------------------
 if choix == "Personne extérieure":
 
