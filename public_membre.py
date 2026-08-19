@@ -1,59 +1,77 @@
 import streamlit as st
-from supabase import create_client, Client
+from supabase_rest import supabase
 import datetime
-
-# -----------------------------
-# Connexion Supabase
-# -----------------------------
-url = st.secrets["SUPABASE_URL"]
-key = st.secrets["SUPABASE_KEY"]
-supabase: Client = create_client(url, key)
 
 st.set_page_config(page_title="Préinscription membre", page_icon="🐶", layout="centered")
 
-# -----------------------------
-# En-tête
-# -----------------------------
 st.title("Préinscription membre du Club Canin")
 st.write("Cette page est réservée aux **membres déjà inscrits au club**.")
 
-# -----------------------------
+# ---------------------------------------------------------
 # Charger les membres
-# -----------------------------
-membres = supabase.table("membres").select("*").execute().data
-chiens = supabase.table("chiens").select("*").execute().data
-seances = supabase.table("seances").select("*").execute().data
+# ---------------------------------------------------------
+membres = (
+    supabase.table("membres")
+    .select("*")
+    .order("nom")
+    .execute()
+    .data
+)
 
-# -----------------------------
+if not membres:
+    st.error("Aucun membre trouvé.")
+    st.stop()
+
 # Sélection du membre
-# -----------------------------
-liste_membres = {f"{m['nom']} {m['prenom']}": m["id"] for m in membres}
-membre_nom = st.selectbox("Sélectionnez votre nom", list(liste_membres.keys()))
-membre_id = liste_membres[membre_nom]
+membre_labels = {f"{m['prenom']} {m['nom']}": m["id"] for m in membres}
+membre_nom = st.selectbox("Votre nom :", list(membre_labels.keys()))
+membre_id = membre_labels[membre_nom]
 
-# -----------------------------
-# Sélection du chien
-# -----------------------------
-chiens_membre = [c for c in chiens if c["membre_id"] == membre_id]
-liste_chiens = {c["nom"]: c["id"] for c in chiens_membre}
+# ---------------------------------------------------------
+# Charger les chiens du membre
+# ---------------------------------------------------------
+chiens = (
+    supabase.table("chiens")
+    .select("*")
+    .eq("membre_id", membre_id)
+    .execute()
+    .data
+)
 
-if len(liste_chiens) == 0:
+if not chiens:
     st.error("Aucun chien enregistré pour ce membre.")
     st.stop()
 
-chien_nom = st.selectbox("Sélectionnez votre chien", list(liste_chiens.keys()))
-chien_id = liste_chiens[chien_nom]
+chien_labels = {f"{c['nom']} ({c['race']})": c["id"] for c in chiens}
+chien_nom = st.selectbox("Votre chien :", list(chien_labels.keys()))
+chien_id = chien_labels[chien_nom]
 
-# -----------------------------
-# Sélection de la séance
-# -----------------------------
-liste_seances = {f"{s['date']} - {s['type']}": s["id"] for s in seances}
-seance_nom = st.selectbox("Séance", list(liste_seances.keys()))
-seance_id = liste_seances[seance_nom]
+# ---------------------------------------------------------
+# Charger les séances
+# ---------------------------------------------------------
+seances = (
+    supabase.table("cours_seances")
+    .select("*")
+    .order("date_seance")
+    .execute()
+    .data
+)
 
-# -----------------------------
+if not seances:
+    st.error("Aucune séance disponible.")
+    st.stop()
+
+seance_labels = {
+    f"{s['date_seance']} - {s['heure_debut']}": s["id"]
+    for s in seances
+}
+
+seance_nom = st.selectbox("Séance :", list(seance_labels.keys()))
+seance_id = seance_labels[seance_nom]
+
+# ---------------------------------------------------------
 # Bouton d'inscription
-# -----------------------------
+# ---------------------------------------------------------
 if st.button("S'inscrire à la séance"):
     data = {
         "membre_id": membre_id,
@@ -62,7 +80,7 @@ if st.button("S'inscrire à la séance"):
         "type": "membre",
         "statut": "en_attente",
         "traitee": False,
-        "date_inscription": datetime.datetime.now().isoformat()
+        "date_inscription": str(datetime.date.today())
     }
 
     supabase.table("preinscriptions").insert(data).execute()
