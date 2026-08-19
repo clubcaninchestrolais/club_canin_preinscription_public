@@ -87,13 +87,10 @@ if email:
             "membre_id": membre_id,
             "chien_id": chien_id,
             "seance_id": seance_id,
-            "type": "membre",
-            "statut": "en_attente",
-            "traitee": False,
-            "date_inscription": str(datetime.date.today())
+            "date_presence": str(datetime.date.today()),
+            "present": False
         }
 
-        supabase.table("preinscriptions").insert(data).execute()
-        st.success("Votre préinscription a été envoyée !")
-
+        supabase.table("cours_presences").insert(data).execute()
+        st.success("Votre inscription a été enregistrée !")
 
