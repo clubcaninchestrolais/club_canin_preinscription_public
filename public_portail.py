@@ -100,7 +100,7 @@ if choix == "Membre du club":
 
 
 # ---------------------------------------------------------
-# FLUX EXTÉRIEUR (schéma correct de ta table preinscriptions)
+# FLUX EXTÉRIEUR — VERSION 100% COMPATIBLE AVEC TA TABLE
 # ---------------------------------------------------------
 if choix == "Personne extérieure":
 
@@ -110,12 +110,10 @@ if choix == "Personne extérieure":
     prenom = st.text_input("Prénom")
     email_ext = st.text_input("Email")
     telephone = st.text_input("Téléphone")
-    adresse = st.text_input("Adresse")
-    code_postal = st.text_input("Code postal")
-    ville = st.text_input("Ville")
 
     chien_nom = st.text_input("Nom du chien")
     chien_race = st.text_input("Race du chien")
+    chien_naissance = st.date_input("Date de naissance du chien", value=None)
 
     # Charger les séances
     seances = (
@@ -140,15 +138,14 @@ if choix == "Personne extérieure":
             "prenom": prenom,
             "email": email_ext,
             "telephone": telephone,
-            "adresse": adresse,
-            "code_postal": code_postal,
-            "ville": ville,
             "chien_nom": chien_nom,
             "chien_race": chien_race,
+            "chien_naissance": str(chien_naissance) if chien_naissance else None,
             "seance_id": seance_id,
-            "date_inscription": str(datetime.date.today()),
-            "statut": "en_attente",
-            "traitee": False
+            "cours_id": None,
+            "traitee": False,
+            "acceptee": False,
+            "type": "exterieur"
         }
 
         supabase.table("preinscriptions").insert(data).execute()
