@@ -50,11 +50,11 @@ if choix == "Membre du club":
         # Vérifier si le membre est bénévole
         est_benevole = membre.get("benevole", False)
 
-        # Charger les chiens du membre
+        # Charger les chiens du membre (champ correct : id_membre)
         chiens = (
             supabase.table("chiens")
             .select("*")
-            .eq("membre_id", membre_id)
+            .eq("id_membre", membre_id)
             .execute()
             .data
         )
