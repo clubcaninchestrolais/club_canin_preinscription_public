@@ -87,8 +87,9 @@ if choix == "Membre du club":
             st.error("Aucune séance disponible.")
             st.stop()
 
+        # CORRECTION : suppression de heure_debut
         seance_labels = {
-            f"{s['date_seance']} - {s['heure_debut']}": s["id"]
+            f"{s['date_seance']}": s["id"]
             for s in seances
         }
 
@@ -135,8 +136,9 @@ if choix == "Personne extérieure":
     )
 
     if seances:
+        # CORRECTION : suppression de heure_debut
         seance_labels = {
-            f"{s['date_seance']} - {s['heure_debut']}": s["id"]
+            f"{s['date_seance']}": s["id"]
             for s in seances
         }
         seance_nom = st.selectbox("Séance :", list(seance_labels.keys()))
