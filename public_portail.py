@@ -47,10 +47,8 @@ if choix == "Membre du club":
 
         st.success(f"Bienvenue {membre['prenom']} {membre['nom']} !")
 
-        # Vérifier si le membre est bénévole
         est_benevole = membre.get("benevole", False)
 
-        # Charger les chiens du membre (champ correct : id_membre)
         chiens = (
             supabase.table("chiens")
             .select("*")
@@ -59,12 +57,10 @@ if choix == "Membre du club":
             .data
         )
 
-        # Si bénévole → pas besoin de chien
         if est_benevole:
             st.info("Vous êtes bénévole : l'inscription ne nécessite pas de chien.")
             chien_id = None
 
-        # Si membre normal → il doit avoir un chien
         else:
             if not chiens:
                 st.error("Aucun chien enregistré pour ce membre.")
@@ -87,23 +83,31 @@ if choix == "Membre du club":
             st.error("Aucune séance disponible.")
             st.stop()
 
-        # CORRECTION : suppression de heure_debut
+        # Affichage complet séance
         seance_labels = {
-            f"{s['date_seance']}": s["id"]
+            f"{s['date_seance']} - {s.get('heure_debut','')} - {s.get('cours_nom','')}": s["id"]
             for s in seances
         }
 
         seance_nom = st.selectbox("Séance :", list(seance_labels.keys()))
         seance_id = seance_labels[seance_nom]
 
-        # Inscription membre ou bénévole
         if st.button("S'inscrire à la séance"):
+
+            seance = next(s for s in seances if s["id"] == seance_id)
+
             data = {
                 "membre_id": membre_id,
-                "chien_id": chien_id,  # peut être None si bénévole
+                "chien_id": chien_id,
                 "seance_id": seance_id,
                 "date_presence": str(datetime.date.today()),
-                "present": False
+                "present": False,
+
+                # 🟩 Enregistrement du cours
+                "cours_id": seance.get("cours_id"),
+                "cours_nom": seance.get("cours_nom"),
+                "date_seance": seance["date_seance"],
+                "heure_debut": seance.get("heure_debut")
             }
 
             supabase.table("cours_presences").insert(data).execute()
@@ -111,7 +115,7 @@ if choix == "Membre du club":
 
 
 # ---------------------------------------------------------
-# FLUX EXTÉRIEUR — Compatible avec ta table preinscriptions
+# FLUX EXTÉRIEUR
 # ---------------------------------------------------------
 if choix == "Personne extérieure":
 
@@ -126,7 +130,6 @@ if choix == "Personne extérieure":
     chien_race = st.text_input("Race du chien")
     chien_naissance = st.date_input("Date de naissance du chien", value=None)
 
-    # Charger les séances
     seances = (
         supabase.table("cours_seances")
         .select("*")
@@ -136,15 +139,18 @@ if choix == "Personne extérieure":
     )
 
     if seances:
-        # CORRECTION : suppression de heure_debut
         seance_labels = {
-            f"{s['date_seance']}": s["id"]
+            f"{s['date_seance']} - {s.get('heure_debut','')} - {s.get('cours_nom','')}": s["id"]
             for s in seances
         }
+
         seance_nom = st.selectbox("Séance :", list(seance_labels.keys()))
         seance_id = seance_labels[seance_nom]
 
     if st.button("Envoyer la préinscription"):
+
+        seance = next(s for s in seances if s["id"] == seance_id)
+
         data = {
             "nom": nom,
             "prenom": prenom,
@@ -153,8 +159,14 @@ if choix == "Personne extérieure":
             "chien_nom": chien_nom,
             "chien_race": chien_race,
             "chien_naissance": str(chien_naissance) if chien_naissance else None,
+
+            # 🟩 Enregistrement complet du cours
             "seance_id": seance_id,
-            "cours_id": None,
+            "cours_id": seance.get("cours_id"),
+            "cours_nom": seance.get("cours_nom"),
+            "date_seance": seance["date_seance"],
+            "heure_debut": seance.get("heure_debut"),
+
             "traitee": False,
             "acceptee": False,
             "type": "exterieur"
