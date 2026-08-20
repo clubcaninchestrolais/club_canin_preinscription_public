@@ -103,7 +103,7 @@ if choix == "Membre du club":
                 "date_presence": str(datetime.date.today()),
                 "present": False,
 
-                # 🟩 Enregistrement du cours
+                # Enregistrement du cours
                 "cours_id": seance.get("cours_id"),
                 "cours_nom": seance.get("cours_nom"),
                 "date_seance": seance["date_seance"],
@@ -130,6 +130,7 @@ if choix == "Personne extérieure":
     chien_race = st.text_input("Race du chien")
     chien_naissance = st.date_input("Date de naissance du chien", value=None)
 
+    # Charger les séances
     seances = (
         supabase.table("cours_seances")
         .select("*")
@@ -160,7 +161,7 @@ if choix == "Personne extérieure":
             "chien_race": chien_race,
             "chien_naissance": str(chien_naissance) if chien_naissance else None,
 
-            # 🟩 Enregistrement complet du cours
+            # Enregistrement complet du cours
             "seance_id": seance_id,
             "cours_id": seance.get("cours_id"),
             "cours_nom": seance.get("cours_nom"),
@@ -174,3 +175,4 @@ if choix == "Personne extérieure":
 
         supabase.table("preinscriptions").insert(data).execute()
         st.success("Votre préinscription a été envoyée !")
+
