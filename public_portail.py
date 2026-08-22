@@ -83,12 +83,12 @@ if choix == "Membre du club":
             chien_id = chien_labels[chien_nom]
 
         # Charger uniquement les séances FUTURES et NON archivées
-        aujourdhui = datetime.date.today()
+        aujourdhui = datetime.date.today().isoformat()
 
         seances = (
             supabase.table("cours_seances")
             .select("*")
-            .gte("date_seance", aujourdhui.isoformat())
+            .gte("date_seance", aujourdhui)
             .eq("archive", False)
             .order("date_seance")
             .execute()
@@ -113,25 +113,16 @@ if choix == "Membre du club":
 
             seance = next(s for s in seances if s["id"] == seance_id)
 
-            # Sécurisation des dates
-            date_presence = datetime.date.today().isoformat()
-
-            date_seance_val = seance["date_seance"]
-            if isinstance(date_seance_val, datetime.date):
-                date_seance_str = date_seance_val.isoformat()
-            else:
-                date_seance_str = str(date_seance_val)
-
             data = {
                 "membre_id": membre_id,
                 "chien_id": chien_id,
                 "seance_id": seance_id,
-                "date_presence": date_presence,
+                "date_presence": datetime.date.today().isoformat(),
                 "present": False,
 
                 "cours_id": seance.get("cours_id"),
                 "cours_nom": map_cours.get(seance.get("cours_id"), "Inconnu"),
-                "date_seance": date_seance_str,
+                "date_seance": seance["date_seance"],
                 "heure_debut": seance.get("heure_debut")
             }
 
@@ -156,12 +147,12 @@ if choix == "Personne extérieure":
     chien_naissance = st.date_input("Date de naissance du chien", value=None)
 
     # Charger uniquement les séances FUTURES et NON archivées
-    aujourdhui = datetime.date.today()
+    aujourdhui = datetime.date.today().isoformat()
 
     seances = (
         supabase.table("cours_seances")
         .select("*")
-        .gte("date_seance", aujourdhui.isoformat())
+        .gte("date_seance", aujourdhui)
         .eq("archive", False)
         .order("date_seance")
         .execute()
@@ -182,18 +173,6 @@ if choix == "Personne extérieure":
 
         seance = next(s for s in seances if s["id"] == seance_id)
 
-        # Sécurisation des dates
-        date_seance_val = seance["date_seance"]
-        if isinstance(date_seance_val, datetime.date):
-            date_seance_str = date_seance_val.isoformat()
-        else:
-            date_seance_str = str(date_seance_val)
-
-        if isinstance(chien_naissance, datetime.date):
-            chien_naissance_str = chien_naissance.isoformat()
-        else:
-            chien_naissance_str = str(chien_naissance) if chien_naissance else None
-
         data = {
             "nom": nom,
             "prenom": prenom,
@@ -201,12 +180,12 @@ if choix == "Personne extérieure":
             "telephone": telephone,
             "chien_nom": chien_nom,
             "chien_race": chien_race,
-            "chien_naissance": chien_naissance_str,
+            "chien_naissance": chien_naissance.isoformat() if chien_naissance else None,
 
             "seance_id": seance_id,
             "cours_id": seance.get("cours_id"),
             "cours_nom": map_cours.get(seance.get("cours_id"), "Inconnu"),
-            "date_seance": date_seance_str,
+            "date_seance": seance["date_seance"],
             "heure_debut": seance.get("heure_debut"),
 
             "traitee": False,
