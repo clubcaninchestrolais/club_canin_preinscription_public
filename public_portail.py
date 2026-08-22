@@ -14,18 +14,6 @@ st.set_page_config(page_title="Portail d'inscription", page_icon="🐶", layout=
 st.title("Portail d'inscription du Club Canin")
 
 # ---------------------------------------------------------
-# Charger les cours pour afficher la catégorie
-# ---------------------------------------------------------
-cours = (
-    supabase.table("cours")
-    .select("id, categorie")
-    .execute()
-    .data
-)
-
-map_cours = {c["id"]: c["categorie"] for c in cours}
-
-# ---------------------------------------------------------
 # Choix du type d'utilisateur
 # ---------------------------------------------------------
 choix = st.radio(
@@ -82,14 +70,10 @@ if choix == "Membre du club":
             chien_nom = st.selectbox("Votre chien :", list(chien_labels.keys()))
             chien_id = chien_labels[chien_nom]
 
-        # Charger uniquement les séances FUTURES et NON archivées
-        aujourdhui = datetime.date.today().isoformat()
-
+        # Charger les séances
         seances = (
             supabase.table("cours_seances")
             .select("*")
-            .gte("date_seance", aujourdhui)
-            .eq("archive", False)
             .order("date_seance")
             .execute()
             .data
@@ -99,10 +83,9 @@ if choix == "Membre du club":
             st.error("Aucune séance disponible.")
             st.stop()
 
-        # Affichage complet séance : date + catégorie + heure
+        # Affichage complet séance
         seance_labels = {
-            f"{s['date_seance']} - {map_cours.get(s['cours_id'], 'Inconnu')} - {s.get('heure_debut','')}"
-            : s["id"]
+            f"{s['date_seance']} - {s.get('heure_debut','')} - {s.get('cours_nom','')}": s["id"]
             for s in seances
         }
 
@@ -117,11 +100,12 @@ if choix == "Membre du club":
                 "membre_id": membre_id,
                 "chien_id": chien_id,
                 "seance_id": seance_id,
-                "date_presence": datetime.date.today().isoformat(),
+                "date_presence": str(datetime.date.today()),
                 "present": False,
 
+                # Enregistrement du cours
                 "cours_id": seance.get("cours_id"),
-                "cours_nom": map_cours.get(seance.get("cours_id"), "Inconnu"),
+                "cours_nom": seance.get("cours_nom"),
                 "date_seance": seance["date_seance"],
                 "heure_debut": seance.get("heure_debut")
             }
@@ -146,14 +130,10 @@ if choix == "Personne extérieure":
     chien_race = st.text_input("Race du chien")
     chien_naissance = st.date_input("Date de naissance du chien", value=None)
 
-    # Charger uniquement les séances FUTURES et NON archivées
-    aujourdhui = datetime.date.today().isoformat()
-
+    # Charger les séances
     seances = (
         supabase.table("cours_seances")
         .select("*")
-        .gte("date_seance", aujourdhui)
-        .eq("archive", False)
         .order("date_seance")
         .execute()
         .data
@@ -161,8 +141,7 @@ if choix == "Personne extérieure":
 
     if seances:
         seance_labels = {
-            f"{s['date_seance']} - {map_cours.get(s['cours_id'], 'Inconnu')} - {s.get('heure_debut','')}"
-            : s["id"]
+            f"{s['date_seance']} - {s.get('heure_debut','')} - {s.get('cours_nom','')}": s["id"]
             for s in seances
         }
 
@@ -180,11 +159,12 @@ if choix == "Personne extérieure":
             "telephone": telephone,
             "chien_nom": chien_nom,
             "chien_race": chien_race,
-            "chien_naissance": chien_naissance.isoformat() if chien_naissance else None,
+            "chien_naissance": str(chien_naissance) if chien_naissance else None,
 
+            # Enregistrement complet du cours
             "seance_id": seance_id,
             "cours_id": seance.get("cours_id"),
-            "cours_nom": map_cours.get(seance.get("cours_id"), "Inconnu"),
+            "cours_nom": seance.get("cours_nom"),
             "date_seance": seance["date_seance"],
             "heure_debut": seance.get("heure_debut"),
 
@@ -195,5 +175,6 @@ if choix == "Personne extérieure":
 
         supabase.table("preinscriptions").insert(data).execute()
         st.success("Votre préinscription a été envoyée !")
+
 
 
