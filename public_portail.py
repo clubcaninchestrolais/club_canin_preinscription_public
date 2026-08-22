@@ -113,17 +113,25 @@ if choix == "Membre du club":
 
             seance = next(s for s in seances if s["id"] == seance_id)
 
+            # Sécurisation des dates
+            date_presence = datetime.date.today().isoformat()
+
+            date_seance_val = seance["date_seance"]
+            if isinstance(date_seance_val, datetime.date):
+                date_seance_str = date_seance_val.isoformat()
+            else:
+                date_seance_str = str(date_seance_val)
+
             data = {
                 "membre_id": membre_id,
                 "chien_id": chien_id,
                 "seance_id": seance_id,
-                "date_presence": str(datetime.date.today()),
+                "date_presence": date_presence,
                 "present": False,
 
-                # Enregistrement du cours
                 "cours_id": seance.get("cours_id"),
                 "cours_nom": map_cours.get(seance.get("cours_id"), "Inconnu"),
-                "date_seance": seance["date_seance"],
+                "date_seance": date_seance_str,
                 "heure_debut": seance.get("heure_debut")
             }
 
@@ -174,6 +182,18 @@ if choix == "Personne extérieure":
 
         seance = next(s for s in seances if s["id"] == seance_id)
 
+        # Sécurisation des dates
+        date_seance_val = seance["date_seance"]
+        if isinstance(date_seance_val, datetime.date):
+            date_seance_str = date_seance_val.isoformat()
+        else:
+            date_seance_str = str(date_seance_val)
+
+        if isinstance(chien_naissance, datetime.date):
+            chien_naissance_str = chien_naissance.isoformat()
+        else:
+            chien_naissance_str = str(chien_naissance) if chien_naissance else None
+
         data = {
             "nom": nom,
             "prenom": prenom,
@@ -181,13 +201,12 @@ if choix == "Personne extérieure":
             "telephone": telephone,
             "chien_nom": chien_nom,
             "chien_race": chien_race,
-            "chien_naissance": str(chien_naissance) if chien_naissance else None,
+            "chien_naissance": chien_naissance_str,
 
-            # Enregistrement complet du cours
             "seance_id": seance_id,
             "cours_id": seance.get("cours_id"),
             "cours_nom": map_cours.get(seance.get("cours_id"), "Inconnu"),
-            "date_seance": seance["date_seance"],
+            "date_seance": date_seance_str,
             "heure_debut": seance.get("heure_debut"),
 
             "traitee": False,
