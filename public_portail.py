@@ -14,16 +14,6 @@ st.set_page_config(page_title="Portail d'inscription", page_icon="🐶", layout=
 st.title("Portail d'inscription du Club Canin")
 
 # ---------------------------------------------------------
-# ARCHIVER automatiquement les séances passées
-# ---------------------------------------------------------
-aujourdhui = datetime.date.today()
-
-supabase.table("cours_seances") \
-    .update({"archive": True}) \
-    .lt("date_seance", aujourdhui.isoformat()) \
-    .execute()
-
-# ---------------------------------------------------------
 # Charger les cours pour afficher la catégorie
 # ---------------------------------------------------------
 cours = (
@@ -93,6 +83,8 @@ if choix == "Membre du club":
             chien_id = chien_labels[chien_nom]
 
         # Charger uniquement les séances FUTURES et NON archivées
+        aujourdhui = datetime.date.today()
+
         seances = (
             supabase.table("cours_seances")
             .select("*")
@@ -156,6 +148,8 @@ if choix == "Personne extérieure":
     chien_naissance = st.date_input("Date de naissance du chien", value=None)
 
     # Charger uniquement les séances FUTURES et NON archivées
+    aujourdhui = datetime.date.today()
+
     seances = (
         supabase.table("cours_seances")
         .select("*")
@@ -203,4 +197,5 @@ if choix == "Personne extérieure":
 
         supabase.table("preinscriptions").insert(data).execute()
         st.success("Votre préinscription a été envoyée !")
+
 
