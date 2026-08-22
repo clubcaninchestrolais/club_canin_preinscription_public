@@ -98,9 +98,9 @@ if choix == "Membre du club":
             st.error("Aucune séance disponible.")
             st.stop()
 
-        # Affichage complet séance : date + heure + catégorie
+        # ⭐ Affichage basé sur nom_seance
         seance_labels = {
-            f"{s['date_seance']} - {s.get('heure_debut','')} - {map_cours.get(s.get('cours_id'),'')}": s["id"]
+            s.get("nom_seance", f"{s['date_seance']}"): s["id"]
             for s in seances
         }
 
@@ -142,8 +142,7 @@ if choix == "Personne extérieure":
 
     chien_nom = st.text_input("Nom du chien")
     chien_race = st.text_input("Race du chien")
-    # 🔥 Date de naissance retirée
-    chien_naissance = None
+    chien_naissance = None  # retiré
 
     # Charger uniquement les séances FUTURES
     aujourdhui = datetime.date.today().isoformat()
@@ -158,8 +157,9 @@ if choix == "Personne extérieure":
     )
 
     if seances:
+        # ⭐ Affichage basé sur nom_seance
         seance_labels = {
-            f"{s['date_seance']} - {s.get('heure_debut','')} - {map_cours.get(s.get('cours_id'),'')}": s["id"]
+            s.get("nom_seance", f"{s['date_seance']}"): s["id"]
             for s in seances
         }
 
@@ -177,7 +177,7 @@ if choix == "Personne extérieure":
             "telephone": telephone,
             "chien_nom": chien_nom,
             "chien_race": chien_race,
-            "chien_naissance": None,  # 🔥 retiré
+            "chien_naissance": None,
 
             "seance_id": seance_id,
             "cours_id": seance.get("cours_id"),
