@@ -176,6 +176,7 @@ if choix == "Personne extérieure":
 
     # Extraire date_seance et heure_debut
     date_seance_str, heure_debut_str = seance_nom.split(" - ")
+    date_seance_value = datetime.date.fromisoformat(date_seance_str)
 
     if st.button("Envoyer la préinscription"):
 
@@ -212,7 +213,7 @@ if choix == "Personne extérieure":
             "cours_nom": None,
 
             "seance_id": seance_id,
-            "date_seance": date_seance_str,
+            "date_seance": date_seance_value,
             "heure_debut": heure_debut_str,
 
             "date_preinscription": datetime.date.today().isoformat(),
@@ -227,3 +228,4 @@ if choix == "Personne extérieure":
         }).execute()
 
         st.success("Préinscription envoyée, merci !")
+
