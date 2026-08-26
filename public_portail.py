@@ -21,7 +21,7 @@ choix = st.radio(
 )
 
 # ---------------------------------------------------------
-# FLUX MEMBRE (avec nom du cours)
+# FLUX MEMBRE (avec nom_seance)
 # ---------------------------------------------------------
 if choix == "Membre du club":
 
@@ -69,12 +69,12 @@ if choix == "Membre du club":
             chien_nom = st.selectbox("Votre chien :", list(chien_labels.keys()))
             chien_id = chien_labels[chien_nom]
 
-        # Charger les séances futures (AVEC nom du cours)
+        # Charger les séances futures (AVEC nom_seance)
         aujourdhui = datetime.date.today().isoformat()
 
         seances = (
             supabase.table("cours_seances")
-            .select("*, cours(*)")   # ✔ jointure automatique
+            .select("*")   # nom_seance est déjà dans la table
             .gte("date_seance", aujourdhui)
             .order("date_seance")
             .execute()
@@ -85,9 +85,9 @@ if choix == "Membre du club":
             st.error("Aucune séance disponible.")
             st.stop()
 
-        # Affichage complet : date + nom du cours
+        # Affichage complet : nom_seance
         seance_labels = {
-            f"{s['date_seance']} - {s['cours']['nom_cours']}": s["id"]
+            f"{s['nom_seance']}": s["id"]
             for s in seances
         }
 
@@ -164,15 +164,16 @@ if choix == "Personne extérieure":
         st.stop()
 
     seance_labels = {
-        f"{s['date_seance']} - {s.get('heure_debut', 'Non spécifiée')}": s["id"]
+        f"{s['nom_seance']}": s["id"]
         for s in seances
     }
 
     seance_nom = st.selectbox("Séance :", list(seance_labels.keys()))
     seance_id = int(seance_labels[seance_nom])
 
-    date_seance_str, heure_debut_str = seance_nom.split(" - ")
-    date_seance_value = datetime.date.fromisoformat(date_seance_str)
+    date_seance_value = datetime.date.fromisoformat(
+        seance_nom.split("—")[-1].strip()[:10]
+    )
 
     if st.button("Envoyer la préinscription"):
 
@@ -208,7 +209,7 @@ if choix == "Personne extérieure":
 
             "seance_id": seance_id,
             "date_seance": date_seance_value.isoformat(),
-            "heure_debut": heure_debut_str,
+            "heure_debut": None,
 
             "date_preinscription": datetime.date.today().isoformat(),
 
