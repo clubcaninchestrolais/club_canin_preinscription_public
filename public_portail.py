@@ -21,7 +21,7 @@ choix = st.radio(
 )
 
 # ---------------------------------------------------------
-# FLUX MEMBRE (corrigé + blocage double inscription)
+# FLUX MEMBRE
 # ---------------------------------------------------------
 if choix == "Membre du club":
 
@@ -69,7 +69,7 @@ if choix == "Membre du club":
             chien_nom = st.selectbox("Votre chien :", list(chien_labels.keys()))
             chien_id = chien_labels[chien_nom]
 
-        # Charger uniquement les séances FUTURES
+        # Charger les séances futures
         aujourdhui = datetime.date.today().isoformat()
 
         seances = (
@@ -95,7 +95,7 @@ if choix == "Membre du club":
 
         if st.button("S'inscrire à la séance"):
 
-            # ⭐ Vérifier si déjà inscrit
+            # Vérifier doublon
             existe = (
                 supabase.table("cours_seances_inscriptions")
                 .select("id")
@@ -109,7 +109,7 @@ if choix == "Membre du club":
                 st.error("Ce chien est déjà inscrit à cette séance.")
                 st.stop()
 
-            # ⭐ INSCRIPTION DIRECTE DANS cours_seances_inscriptions
+            # Inscription membre
             supabase.table("cours_seances_inscriptions").insert({
                 "seance_id": seance_id,
                 "membre_id": membre_id,
@@ -123,7 +123,7 @@ if choix == "Membre du club":
 
 
 # ---------------------------------------------------------
-# FLUX EXTÉRIEUR (simple, propre, compatible Supabase)
+# FLUX EXTÉRIEUR — VERSION FINALE
 # ---------------------------------------------------------
 if choix == "Personne extérieure":
 
@@ -134,7 +134,7 @@ if choix == "Personne extérieure":
     email_ext = st.text_input("Email")
     telephone = st.text_input("Téléphone")
 
-    # ⭐ Empêcher un membre d'utiliser le flux extérieur
+    # Empêcher un membre d'utiliser le flux extérieur
     if email_ext:
         membre_existe = (
             supabase.table("membres")
@@ -183,7 +183,7 @@ if choix == "Personne extérieure":
             st.error("Veuillez remplir tous les champs obligatoires.")
             st.stop()
 
-        # ⭐ Blocage anti-doublon extérieur
+        # Vérifier doublon extérieur
         existe_ext = (
             supabase.table("preinscriptions")
             .select("id")
@@ -197,7 +197,7 @@ if choix == "Personne extérieure":
             st.error("Vous avez déjà envoyé une préinscription pour cette séance.")
             st.stop()
 
-        # ⭐ Insertion conforme à ta table Supabase
+        # Insertion conforme à ta table Supabase
         supabase.table("preinscriptions").insert({
             "nom": nom,
             "prenom": prenom,
@@ -206,6 +206,7 @@ if choix == "Personne extérieure":
 
             "chien_nom": chien_nom,
             "chien_race": chien_race,
+            "chien_naissance": None,
 
             "cours_id": None,
             "cours_nom": None,
@@ -224,7 +225,5 @@ if choix == "Personne extérieure":
             "chien_id": None,
             "membre_id": None
         }).execute()
-
-        st.success("Préinscription envoyée, merci !")
 
         st.success("Préinscription envoyée, merci !")
