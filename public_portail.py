@@ -110,7 +110,7 @@ if choix == "Membre du club":
             # ⭐ Vérifier si déjà inscrit
             existe = (
                 supabase.table("cours_seances_inscriptions")
-                .select("*")
+                .select("id")
                 .eq("seance_id", seance_id)
                 .eq("chien_id", chien_id)
                 .execute()
@@ -135,7 +135,7 @@ if choix == "Membre du club":
 
 
 # ---------------------------------------------------------
-# FLUX EXTÉRIEUR (inchangé pour l’instant)
+# FLUX EXTÉRIEUR (avec blocage membre)
 # ---------------------------------------------------------
 if choix == "Personne extérieure":
 
@@ -145,6 +145,20 @@ if choix == "Personne extérieure":
     prenom = st.text_input("Prénom")
     email_ext = st.text_input("Email")
     telephone = st.text_input("Téléphone")
+
+    # ⭐ Empêcher un membre d'utiliser le flux extérieur
+    if email_ext:
+        membre_existe = (
+            supabase.table("membres")
+            .select("id")
+            .eq("email", email_ext)
+            .execute()
+            .data
+        )
+
+        if membre_existe:
+            st.error("Vous êtes membre du club. Veuillez utiliser le formulaire membre.")
+            st.stop()
 
     chien_nom = st.text_input("Nom du chien")
     chien_race = st.text_input("Race du chien")
