@@ -9,20 +9,8 @@ url = st.secrets["SUPABASE_URL"]
 key = st.secrets["SUPABASE_KEY"]
 supabase: Client = create_client(url, key)
 
-st.set_page_config(page_title="Portail d'inscription", page_icon="🐶", layout="centered")
+st.set_page_config(page_title="Portail d'inscription du Club Canin", page_icon="🐶", layout="centered")
 st.title("Portail d'inscription du Club Canin")
-
-# ---------------------------------------------------------
-# Charger les cours pour afficher la catégorie
-# ---------------------------------------------------------
-cours = (
-    supabase.table("cours")
-    .select("id, categorie")
-    .execute()
-    .data
-)
-
-map_cours = {c["id"]: c["categorie"] for c in cours}
 
 # ---------------------------------------------------------
 # Choix du type d'utilisateur
@@ -98,7 +86,7 @@ if choix == "Membre du club":
             st.stop()
 
         seance_labels = {
-            s.get("nom_seance", f"{s['date_seance']}"): s["id"]
+            f"{s['date_seance']} — {s.get('nom_seance', '')}": s["id"]
             for s in seances
         }
 
@@ -135,7 +123,7 @@ if choix == "Membre du club":
 
 
 # ---------------------------------------------------------
-# FLUX EXTÉRIEUR (avec blocage membre)
+# FLUX EXTÉRIEUR (corrigé : blocage membre)
 # ---------------------------------------------------------
 if choix == "Personne extérieure":
 
@@ -155,7 +143,6 @@ if choix == "Personne extérieure":
             .execute()
             .data
         )
-
         if membre_existe:
             st.error("Vous êtes membre du club. Veuillez utiliser le formulaire membre.")
             st.stop()
@@ -176,7 +163,7 @@ if choix == "Personne extérieure":
 
     if seances:
         seance_labels = {
-            s.get("nom_seance", f"{s['date_seance']}"): s["id"]
+            f"{s['date_seance']} — {s.get('nom_seance','')}": s["id"]
             for s in seances
         }
 
@@ -185,28 +172,35 @@ if choix == "Personne extérieure":
 
     if st.button("Envoyer la préinscription"):
 
-        seance = next(s for s in seances if s["id"] == seance_id)
+        if not nom or not prenom or not email_ext or not telephone or not chien_nom or not chien_race:
+            st.error("Veuillez remplir tous les champs obligatoires.")
+            st.stop()
 
-        data = {
+        # ⭐ Blocage anti-doublon extérieur
+        existe_ext = (
+            supabase.table("preinscriptions")
+            .select("id")
+            .eq("email", email_ext)
+            .eq("seance_id", seance_id)
+            .execute()
+            .data
+        )
+
+        if existe_ext:
+            st.error("Vous avez déjà envoyé une préinscription pour cette séance.")
+            st.stop()
+
+        supabase.table("preinscriptions").insert({
             "nom": nom,
             "prenom": prenom,
             "email": email_ext,
             "telephone": telephone,
-
             "chien_nom": chien_nom,
             "chien_race": chien_race,
-            "chien_naissance": None,
-
             "seance_id": seance_id,
-            "cours_id": seance.get("cours_id"),
-            "cours_nom": map_cours.get(seance.get("cours_id")),
-            "date_seance": seance["date_seance"],
-            "heure_debut": seance.get("heure_debut"),
-
+            "date_preinscrip": aujourdhui,
+            "statut": "en_attente",
             "traitee": False,
-            "acceptee": False,
-            "type": "exterieur"
-        }
+        }).execute()
 
-        supabase.table("preinscriptions").insert(data).execute()
-        st.success("Votre préinscription a été enregistrée !")
+        st.success("Préinscription envoyée, merci !")
