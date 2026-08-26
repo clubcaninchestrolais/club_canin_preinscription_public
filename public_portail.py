@@ -33,7 +33,7 @@ choix = st.radio(
 )
 
 # ---------------------------------------------------------
-# FLUX MEMBRE
+# FLUX MEMBRE (corrigé : inscription directe dans cours_seances_inscriptions)
 # ---------------------------------------------------------
 if choix == "Membre du club":
 
@@ -107,30 +107,21 @@ if choix == "Membre du club":
 
         if st.button("S'inscrire à la séance"):
 
-            seance = next(s for s in seances if s["id"] == seance_id)
-
-            # ⭐ Préinscription membre (PAS cours_presences)
-            data = {
+            # ⭐ INSCRIPTION DIRECTE DANS cours_seances_inscriptions (plus de préinscription pour les membres)
+            supabase.table("cours_seances_inscriptions").insert({
+                "seance_id": seance_id,
                 "membre_id": membre_id,
                 "chien_id": chien_id,
-                "seance_id": seance_id,
+                "type_inscription": "membre",
+                "present": False,
+                "actif": True
+            }).execute()
 
-                "cours_id": seance.get("cours_id"),
-                "cours_nom": map_cours.get(seance.get("cours_id")),
-                "date_seance": seance["date_seance"],
-                "heure_debut": seance.get("heure_debut"),
-
-                "type": "membre",
-                "traitee": False,
-                "acceptee": True
-            }
-
-            supabase.table("preinscriptions").insert(data).execute()
-            st.success("Votre préinscription a été enregistrée !")
+            st.success("Votre inscription a été enregistrée !")
 
 
 # ---------------------------------------------------------
-# FLUX EXTÉRIEUR
+# FLUX EXTÉRIEUR (inchangé pour l’instant)
 # ---------------------------------------------------------
 if choix == "Personne extérieure":
 
@@ -148,11 +139,11 @@ if choix == "Personne extérieure":
 
     seances = (
         supabase.table("cours_seances")
-        .select("*")
-        .gte("date_seance", aujourdhui)
-        .order("date_seance")
-        .execute()
-        .data
+            .select("*")
+            .gte("date_seance", aujourdhui)
+            .order("date_seance")
+            .execute()
+            .data
     )
 
     if seances:
@@ -190,4 +181,6 @@ if choix == "Personne extérieure":
         }
 
         supabase.table("preinscriptions").insert(data).execute()
-        st.success("Votre préinscription a été envoyée !")
+        st.success("Votre préinscription a été enregistrée !")
+
+     
