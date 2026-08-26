@@ -21,7 +21,7 @@ choix = st.radio(
 )
 
 # ---------------------------------------------------------
-# FLUX MEMBRE (sans heure_debut)
+# FLUX MEMBRE (sans heure)
 # ---------------------------------------------------------
 if choix == "Membre du club":
 
@@ -85,7 +85,7 @@ if choix == "Membre du club":
             st.error("Aucune séance disponible.")
             st.stop()
 
-        # ✔ PAS d'heure_debut ici
+        # PAS d'heure pour les membres
         seance_labels = {
             f"{s['date_seance']}": s["id"]
             for s in seances
@@ -124,7 +124,7 @@ if choix == "Membre du club":
 
 
 # ---------------------------------------------------------
-# FLUX EXTÉRIEUR (avec heure_debut)
+# FLUX EXTÉRIEUR (avec heure)
 # ---------------------------------------------------------
 if choix == "Personne extérieure":
 
@@ -151,7 +151,7 @@ if choix == "Personne extérieure":
     chien_nom = st.text_input("Nom du chien")
     chien_race = st.text_input("Race du chien")
 
-    # Charger les séances futures (ici on lit l'heure)
+    # Charger les séances futures (avec heure)
     aujourdhui = datetime.date.today().isoformat()
 
     seances = (
@@ -167,7 +167,7 @@ if choix == "Personne extérieure":
         st.error("Aucune séance disponible.")
         st.stop()
 
-    # ✔ Ici on lit heure_debut, car les extérieurs en ont besoin
+    # Ici on lit heure_debut (si elle existe)
     seance_labels = {
         f"{s['date_seance']} - {s.get('heure_debut', 'Non spécifiée')}": s["id"]
         for s in seances
@@ -215,7 +215,7 @@ if choix == "Personne extérieure":
             "cours_nom": None,
 
             "seance_id": seance_id,
-            "date_seance": date_seance_value,
+            "date_seance": date_seance_value.isoformat(),
             "heure_debut": heure_debut_str,
 
             "date_preinscription": datetime.date.today().isoformat(),
