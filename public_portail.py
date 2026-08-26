@@ -33,7 +33,7 @@ choix = st.radio(
 )
 
 # ---------------------------------------------------------
-# FLUX MEMBRE (corrigé : inscription directe dans cours_seances_inscriptions)
+# FLUX MEMBRE (corrigé + blocage double inscription)
 # ---------------------------------------------------------
 if choix == "Membre du club":
 
@@ -107,7 +107,21 @@ if choix == "Membre du club":
 
         if st.button("S'inscrire à la séance"):
 
-            # ⭐ INSCRIPTION DIRECTE DANS cours_seances_inscriptions (plus de préinscription pour les membres)
+            # ⭐ Vérifier si déjà inscrit
+            existe = (
+                supabase.table("cours_seances_inscriptions")
+                .select("*")
+                .eq("seance_id", seance_id)
+                .eq("chien_id", chien_id)
+                .execute()
+                .data
+            )
+
+            if existe:
+                st.error("Ce chien est déjà inscrit à cette séance.")
+                st.stop()
+
+            # ⭐ INSCRIPTION DIRECTE DANS cours_seances_inscriptions
             supabase.table("cours_seances_inscriptions").insert({
                 "seance_id": seance_id,
                 "membre_id": membre_id,
@@ -182,5 +196,3 @@ if choix == "Personne extérieure":
 
         supabase.table("preinscriptions").insert(data).execute()
         st.success("Votre préinscription a été enregistrée !")
-
-     
