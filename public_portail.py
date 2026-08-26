@@ -21,7 +21,7 @@ choix = st.radio(
 )
 
 # ---------------------------------------------------------
-# FLUX MEMBRE
+# FLUX MEMBRE (sans heure_debut)
 # ---------------------------------------------------------
 if choix == "Membre du club":
 
@@ -69,7 +69,7 @@ if choix == "Membre du club":
             chien_nom = st.selectbox("Votre chien :", list(chien_labels.keys()))
             chien_id = chien_labels[chien_nom]
 
-        # Charger les séances futures
+        # Charger les séances futures (sans heure)
         aujourdhui = datetime.date.today().isoformat()
 
         seances = (
@@ -85,8 +85,9 @@ if choix == "Membre du club":
             st.error("Aucune séance disponible.")
             st.stop()
 
+        # ✔ PAS d'heure_debut ici
         seance_labels = {
-            f"{s['date_seance']} - {s['heure_debut']}": s["id"]
+            f"{s['date_seance']}": s["id"]
             for s in seances
         }
 
@@ -123,7 +124,7 @@ if choix == "Membre du club":
 
 
 # ---------------------------------------------------------
-# FLUX EXTÉRIEUR — VERSION FINALE
+# FLUX EXTÉRIEUR (avec heure_debut)
 # ---------------------------------------------------------
 if choix == "Personne extérieure":
 
@@ -150,7 +151,7 @@ if choix == "Personne extérieure":
     chien_nom = st.text_input("Nom du chien")
     chien_race = st.text_input("Race du chien")
 
-    # Charger les séances futures
+    # Charger les séances futures (ici on lit l'heure)
     aujourdhui = datetime.date.today().isoformat()
 
     seances = (
@@ -166,15 +167,16 @@ if choix == "Personne extérieure":
         st.error("Aucune séance disponible.")
         st.stop()
 
+    # ✔ Ici on lit heure_debut, car les extérieurs en ont besoin
     seance_labels = {
-        f"{s['date_seance']} - {s['heure_debut']}": s["id"]
+        f"{s['date_seance']} - {s.get('heure_debut', 'Non spécifiée')}": s["id"]
         for s in seances
     }
 
     seance_nom = st.selectbox("Séance :", list(seance_labels.keys()))
     seance_id = seance_labels[seance_nom]
 
-    # Extraire date_seance et heure_debut
+    # Extraire date + heure
     date_seance_str, heure_debut_str = seance_nom.split(" - ")
     date_seance_value = datetime.date.fromisoformat(date_seance_str)
 
@@ -228,4 +230,3 @@ if choix == "Personne extérieure":
         }).execute()
 
         st.success("Préinscription envoyée, merci !")
-
