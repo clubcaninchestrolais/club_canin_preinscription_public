@@ -85,7 +85,6 @@ if choix == "Membre du club":
             st.error("Aucune séance disponible.")
             st.stop()
 
-        # PAS d'heure pour les membres
         seance_labels = {
             f"{s['date_seance']}": s["id"]
             for s in seances
@@ -96,7 +95,6 @@ if choix == "Membre du club":
 
         if st.button("S'inscrire à la séance"):
 
-            # Vérifier doublon
             existe = (
                 supabase.table("cours_seances_inscriptions")
                 .select("id")
@@ -110,7 +108,6 @@ if choix == "Membre du club":
                 st.error("Ce chien est déjà inscrit à cette séance.")
                 st.stop()
 
-            # Inscription membre
             supabase.table("cours_seances_inscriptions").insert({
                 "seance_id": seance_id,
                 "membre_id": membre_id,
@@ -135,7 +132,6 @@ if choix == "Personne extérieure":
     email_ext = st.text_input("Email")
     telephone = st.text_input("Téléphone")
 
-    # Empêcher un membre d'utiliser le flux extérieur
     if email_ext:
         membre_existe = (
             supabase.table("membres")
@@ -151,7 +147,6 @@ if choix == "Personne extérieure":
     chien_nom = st.text_input("Nom du chien")
     chien_race = st.text_input("Race du chien")
 
-    # Charger les séances futures (avec heure)
     aujourdhui = datetime.date.today().isoformat()
 
     seances = (
@@ -167,16 +162,14 @@ if choix == "Personne extérieure":
         st.error("Aucune séance disponible.")
         st.stop()
 
-    # Ici on lit heure_debut (si elle existe)
     seance_labels = {
         f"{s['date_seance']} - {s.get('heure_debut', 'Non spécifiée')}": s["id"]
         for s in seances
     }
 
     seance_nom = st.selectbox("Séance :", list(seance_labels.keys()))
-    seance_id = seance_labels[seance_nom]
+    seance_id = int(seance_labels[seance_nom])   # ✔ Correction finale
 
-    # Extraire date + heure
     date_seance_str, heure_debut_str = seance_nom.split(" - ")
     date_seance_value = datetime.date.fromisoformat(date_seance_str)
 
@@ -186,7 +179,6 @@ if choix == "Personne extérieure":
             st.error("Veuillez remplir tous les champs obligatoires.")
             st.stop()
 
-        # Vérifier doublon extérieur
         existe_ext = (
             supabase.table("preinscriptions")
             .select("id")
@@ -200,7 +192,6 @@ if choix == "Personne extérieure":
             st.error("Vous avez déjà envoyé une préinscription pour cette séance.")
             st.stop()
 
-        # Insertion conforme à ta table Supabase
         supabase.table("preinscriptions").insert({
             "nom": nom,
             "prenom": prenom,
@@ -215,7 +206,7 @@ if choix == "Personne extérieure":
             "cours_nom": None,
 
             "seance_id": seance_id,
-            "date_seance": date_seance_value.isoformat(),
+            "date_seance": date_seance_value.isoformat(),   # ✔ sérialisé
             "heure_debut": heure_debut_str,
 
             "date_preinscription": datetime.date.today().isoformat(),
