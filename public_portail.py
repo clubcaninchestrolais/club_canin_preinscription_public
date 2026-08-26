@@ -86,7 +86,7 @@ if choix == "Membre du club":
             st.stop()
 
         seance_labels = {
-            f"{s['date_seance']} — {s.get('nom_seance', '')}": s["id"]
+            f"{s['date_seance']} - {s['heure_debut']}": s["id"]
             for s in seances
         }
 
@@ -123,7 +123,7 @@ if choix == "Membre du club":
 
 
 # ---------------------------------------------------------
-# FLUX EXTÉRIEUR (corrigé : blocage membre)
+# FLUX EXTÉRIEUR (simple, propre, compatible Supabase)
 # ---------------------------------------------------------
 if choix == "Personne extérieure":
 
@@ -150,6 +150,7 @@ if choix == "Personne extérieure":
     chien_nom = st.text_input("Nom du chien")
     chien_race = st.text_input("Race du chien")
 
+    # Charger les séances futures
     aujourdhui = datetime.date.today().isoformat()
 
     seances = (
@@ -161,14 +162,20 @@ if choix == "Personne extérieure":
             .data
     )
 
-    if seances:
-        seance_labels = {
-            f"{s['date_seance']} — {s.get('nom_seance','')}": s["id"]
-            for s in seances
-        }
+    if not seances:
+        st.error("Aucune séance disponible.")
+        st.stop()
 
-        seance_nom = st.selectbox("Séance :", list(seance_labels.keys()))
-        seance_id = seance_labels[seance_nom]
+    seance_labels = {
+        f"{s['date_seance']} - {s['heure_debut']}": s["id"]
+        for s in seances
+    }
+
+    seance_nom = st.selectbox("Séance :", list(seance_labels.keys()))
+    seance_id = seance_labels[seance_nom]
+
+    # Extraire date_seance et heure_debut
+    date_seance_str, heure_debut_str = seance_nom.split(" - ")
 
     if st.button("Envoyer la préinscription"):
 
@@ -190,17 +197,34 @@ if choix == "Personne extérieure":
             st.error("Vous avez déjà envoyé une préinscription pour cette séance.")
             st.stop()
 
+        # ⭐ Insertion conforme à ta table Supabase
         supabase.table("preinscriptions").insert({
             "nom": nom,
             "prenom": prenom,
             "email": email_ext,
             "telephone": telephone,
+
             "chien_nom": chien_nom,
             "chien_race": chien_race,
+
+            "cours_id": None,
+            "cours_nom": None,
+
             "seance_id": seance_id,
-            "date_preinscrip": aujourdhui,
-            "statut": "en_attente",
+            "date_seance": date_seance_str,
+            "heure_debut": heure_debut_str,
+
+            "date_preinscription": datetime.date.today().isoformat(),
+
+            "statut": "En attente",
             "traitee": False,
+            "acceptee": False,
+            "type": "exterieur",
+
+            "chien_id": None,
+            "membre_id": None
         }).execute()
+
+        st.success("Préinscription envoyée, merci !")
 
         st.success("Préinscription envoyée, merci !")
