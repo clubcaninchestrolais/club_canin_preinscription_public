@@ -21,7 +21,7 @@ choix = st.radio(
 )
 
 # ---------------------------------------------------------
-# FLUX MEMBRE (avec nom_seance)
+# FLUX MEMBRE (corrigé V2)
 # ---------------------------------------------------------
 if choix == "Membre du club":
 
@@ -69,12 +69,12 @@ if choix == "Membre du club":
             chien_nom = st.selectbox("Votre chien :", list(chien_labels.keys()))
             chien_id = chien_labels[chien_nom]
 
-        # Charger les séances futures (AVEC nom_seance)
+        # Charger les séances futures
         aujourdhui = datetime.date.today().isoformat()
 
         seances = (
             supabase.table("cours_seances")
-            .select("*")   # nom_seance est déjà dans la table
+            .select("*")
             .gte("date_seance", aujourdhui)
             .order("date_seance")
             .execute()
@@ -85,7 +85,6 @@ if choix == "Membre du club":
             st.error("Aucune séance disponible.")
             st.stop()
 
-        # Affichage complet : nom_seance
         seance_labels = {
             f"{s['nom_seance']}": s["id"]
             for s in seances
@@ -96,8 +95,9 @@ if choix == "Membre du club":
 
         if st.button("S'inscrire à la séance"):
 
+            # Vérifier si déjà inscrit dans la table V2
             existe = (
-                supabase.table("cours_seances_inscriptions")
+                supabase.table("cours_inscriptions")
                 .select("id")
                 .eq("seance_id", seance_id)
                 .eq("chien_id", chien_id)
@@ -109,13 +109,26 @@ if choix == "Membre du club":
                 st.error("Ce chien est déjà inscrit à cette séance.")
                 st.stop()
 
-            supabase.table("cours_seances_inscriptions").insert({
-                "seance_id": seance_id,
-                "membre_id": membre_id,
+            # Récupérer cours_id depuis la séance
+            seance_info = (
+                supabase.table("cours_seances")
+                .select("cours_id")
+                .eq("id", seance_id)
+                .execute()
+                .data
+            )
+
+            cours_id = seance_info[0]["cours_id"]
+
+            # Nouvelle insertion V2
+            supabase.table("cours_inscriptions").insert({
+                "id_membres": membre_id,
                 "chien_id": chien_id,
-                "type_inscription": "membre",
-                "present": False,
-                "actif": True
+                "seance_id": seance_id,
+                "cours_id": cours_id,
+                "type": "normal",
+                "statut": "inscrit",
+                "inscrit_par": "PORTAIL"
             }).execute()
 
             st.success("Votre inscription a été enregistrée !")
