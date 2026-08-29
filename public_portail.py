@@ -120,15 +120,15 @@ if choix == "Membre du club":
 
             cours_id = seance_info[0]["cours_id"]
 
-            # Nouvelle insertion V2
+            # Nouvelle insertion V2 — compatible avec TA table
             supabase.table("cours_inscriptions").insert({
-                "id_membres": membre_id,
+                "membre_id": membre_id,
                 "chien_id": chien_id,
                 "seance_id": seance_id,
                 "cours_id": cours_id,
                 "type": "normal",
                 "statut": "inscrit",
-                "inscrit_par": "PORTAIL"
+                "date_inscription": datetime.date.today().isoformat()
             }).execute()
 
             st.success("Votre inscription a été enregistrée !")
